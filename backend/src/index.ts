@@ -2,11 +2,17 @@ import { createServer } from 'node:http';
 import { loadEnvFile } from 'node:process';
 import { GarminClient } from './garmin.js';
 import { Store, SyncService } from './sync.js';
+import { readWorkouts } from './workouts.js';
 try { loadEnvFile(); } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
 const store = new Store(process.env.SQLITE_PATH ?? 'activities.sqlite');
 const sync = new SyncService(store, new GarminClient(process.env.GARMIN_PERSONAL_API_KEY ?? ''));
 const server = createServer((req, res) => {
   res.setHeader('Content-Type', 'application/json');
+  if (req.method === 'GET' && req.url === '/workouts') {
+    try { res.end(JSON.stringify(readWorkouts(store.db))); }
+    catch { res.writeHead(500); res.end(JSON.stringify({ error: 'Unable to read workouts: invalid or unavailable data' })); }
+    return;
+  }
   if (req.method === 'GET' && req.url === '/sync/status') { res.end(JSON.stringify(sync.status())); return; }
   if (req.method === 'POST' && req.url === '/sync') {
     if (sync.status()?.state === 'running') { res.writeHead(409); res.end(JSON.stringify({ error: 'Sync already running' })); return; }
