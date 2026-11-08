@@ -83,7 +83,7 @@ const parseDurationMinutes = (value: string): number | null => {
   return hours * 60 + minutes + seconds / 60;
 };
 
-const toDataPoint = (record: RawRunRecord): RunDataPoint | null => {
+const toDataPoint = (record: RawRunRecord): RunDataPoint => {
   const aerobicTe = parseNumber(record['Aerobic TE']);
   const distanceKm = parseNumber(record.Distance);
   const avgHr = parseNumber(record['Avg HR']);
@@ -105,7 +105,7 @@ const toDataPoint = (record: RawRunRecord): RunDataPoint | null => {
     minTemp === null ||
     maxTemp === null
   ) {
-    return null;
+    throw new Error('Invalid workout record');
   }
 
   const effortScore = movingTimeMinutes * (avgHr / maxHr) ** 2 * aerobicTe;
@@ -165,7 +165,6 @@ export const buildChartSummaries = (
           record['Workout Group'] === group && record['Workout Type'] === type,
       )
       .map(toDataPoint)
-      .filter((point): point is RunDataPoint => point !== null)
       .sort((first, second) => first.progression - second.progression);
 
     const dateRange =

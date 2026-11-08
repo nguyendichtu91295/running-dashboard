@@ -56,15 +56,3 @@ export type ChartGroupSummary = {
   points: RunDataPoint[];
   type: string;
 };
-
-export type RunningDataSource = {
-  id: string;
-  label: string;
-  path: string;
-  rowCount?: number;
-};
-
-export type RunningDataSourceManifest = {
-  defaultSourceId: string;
-  sources: RunningDataSource[];
-};
