@@ -17,3 +17,9 @@ archive/*-grouped.csv
 Thumbs.db
 *.log
 dashboard-*.png
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-*

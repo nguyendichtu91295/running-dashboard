@@ -1,0 +1,9 @@
+# Local Garmin sync
+
+Requires Node.js 22.13 or later (the built-in SQLite module is experimental). Run `npm install`, copy `.env.example` to `.env`, set the Personal API key locally, and run `npm run build && npm start` from `backend/`. Do not commit the key or database. The server binds to 127.0.0.1 on port 3000 by default.
+
+`SQLITE_PATH` selects the database (default `activities.sqlite`); use a `.sqlite`, `.sqlite3`, or `.db` suffix so the database and its sidecars are ignored by Git. `PORT` changes the listening port. `SYNC_START_DATE` and `SYNC_END_DATE` optionally set inclusive calendar dates in YYYY-MM-DD, passed to Garmin's search as local calendar dates. End defaults to today's UTC calendar date; start defaults to 364 days before end. The inclusive range may contain at most 365 dates, including across leap years.
+
+Startup opens and migrates SQLite, starts the HTTP listener, and launches a background sync. `GET /sync/status` returns persisted state and timestamps; `POST /sync` retries using the configured range, returning 202 or 409 if a sync is running. A run fetches all pages before committing stable-ID upserts atomically. Failures preserve existing activities; missing required metrics fail the run and need a user decision rather than fabricated data. Restarting marks a previously interrupted run failed. No automatic request retry, incremental retrieval, deletion detection, or assumed rate limit is implemented. Each run uses Garmin's start/limit pagination and a full date-range search. A 401 clears the cached token for the next retry. The API's date boundary behavior and future field completeness are not guaranteed by the discovery sample.
+
+Run `npm test` for synthetic tests. Data is stored as original activity JSON and is not yet integrated into the dashboard.
