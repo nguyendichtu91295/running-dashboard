@@ -51,7 +51,6 @@ export type MetricSummary = {
 export type ChartGroupSummary = {
   chartId: string;
   dateRange: string;
-  group: string;
   metrics: Record<MetricKey, MetricSummary>;
   points: RunDataPoint[];
   type: string;

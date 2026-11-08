@@ -1,0 +1,31 @@
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const { execFileSync } = require('node:child_process');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'running-data-'));
+execFileSync(path.join(__dirname, '../node_modules/.bin/tsc'), ['--module', 'commonjs', '--target', 'es2022', '--skipLibCheck', '--outDir', dir, path.join(__dirname, '../src/features/running-trends/utils/running-data.ts'), path.join(__dirname, '../src/features/running-trends/utils/workouts-api.ts')]);
+const { buildChartSummaries, filterRecordsByDate, defaultDateRange } = require(path.join(dir, 'utils/running-data.js'));
+const { parseWorkouts } = require(path.join(dir, 'utils/workouts-api.js'));
+const types = ['easy run', 'long run', 'interval', 'tempo', 'interval / tempo', 'race', 'uncategorized'];
+const row = (type, progression = '4', date = '2026-11-08 09:00:00') => ({ 'Activity Type': 'running', 'Aerobic TE': '3', 'Avg HR': '150', 'Avg Pace': '5:30', Date: date, Distance: '10', 'Max HR': '180', 'Max Temp': '30', 'Min Temp': '20', 'Moving Time': '0:55:00', 'Progression #': progression, Time: '0:56:00', Title: 'Run', 'Workout Group': 'Wednesday', 'Workout Type': type });
+test('groups all saved types independently of historical group, preserving progression and metrics', () => {
+ const records = parseWorkouts([...types.map(t => row(t)), row('easy run', '9', '2026-11-09 09:00:00'), row('easy run', '2', '2026-11-07 09:00:00')]);
+ const groups = buildChartSummaries(records);
+ assert.deepEqual(groups.map(g => g.type), types);
+ assert.deepEqual(groups.map(g => g.points.length), [3,1,1,1,1,1,1]);
+ assert.equal(new Set(groups.map(g => g.chartId)).size, 7);
+ assert.deepEqual(groups[0].points.map(p => p.progression), [2,4,9]);
+ assert.equal(groups[0].points[0].temperatureC, 25);
+ assert.equal(groups[0].points[0].effortScore, 55 * (150/180)**2 * 3);
+ assert.deepEqual(buildChartSummaries(filterRecordsByDate(records, '2026-11-08', '2026-11-08'))[0].points.map(p => p.progression), [4]);
+ assert.deepEqual(buildChartSummaries([]).map(g => g.points.length), [0,0,0,0,0,0,0]);
+ assert.deepEqual(defaultDateRange(new Date(2026, 4, 31)), { start: '2026-02-28', end: '2026-05-31' });
+});
+test('rejects invalid and incomplete data rather than silently dropping it', () => {
+ assert.throws(() => parseWorkouts([row('unknown')]));
+ assert.throws(() => parseWorkouts([{...row('race'), 'Avg HR': ''}]));
+ assert.throws(() => buildChartSummaries([{...row('race'), 'Avg HR': ''}]));
+ assert.throws(() => parseWorkouts({ error: 'bad status' }));
+});

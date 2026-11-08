@@ -30,7 +30,7 @@ export const RunningGroupSection = ({ summary }: RunningGroupSectionProps) => {
         <div>
           <div className="section-title-row">
             <h2>
-              {summary.group} / {summary.type}
+              {summary.type}
             </h2>
             <Tag color="blue" shape="circle">
               {summary.points.length} {t('runs')}

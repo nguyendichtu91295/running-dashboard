@@ -158,12 +158,9 @@ const calculateMetricSummary = (
 export const buildChartSummaries = (
   records: RawRunRecord[],
 ): ChartGroupSummary[] =>
-  CHART_GROUPS.map(({ group, type }) => {
+  CHART_GROUPS.map(({ chartId, type }) => {
     const points = records
-      .filter(
-        (record) =>
-          record['Workout Group'] === group && record['Workout Type'] === type,
-      )
+      .filter((record) => record['Workout Type'] === type)
       .map(toDataPoint)
       .sort((first, second) => first.progression - second.progression);
 
@@ -173,9 +170,8 @@ export const buildChartSummaries = (
         : 'No runs';
 
     return {
-      chartId: `${group}-${type}`.toLowerCase().replaceAll(/\s+|\/+/g, '-'),
+      chartId,
       dateRange,
-      group,
       metrics: {
         avgHr: calculateMetricSummary(points, 'avgHr'),
         distanceKm: calculateMetricSummary(points, 'distanceKm'),
