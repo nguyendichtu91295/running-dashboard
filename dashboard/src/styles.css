@@ -347,3 +347,8 @@ body {
     font-size: 26px;
   }
 }
+
+.date-range-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; }
+.date-range-toolbar label { display: flex; flex-direction: column; gap: 6px; }
+.date-range-toolbar input { padding: 8px; border: 1px solid #c9cdd4; border-radius: 6px; font: inherit; }
+.date-range-toolbar [role="alert"] { color: #c53030; }

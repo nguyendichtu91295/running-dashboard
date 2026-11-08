@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 
 import { parseCsv } from '../utils/csv';
-import { buildChartSummaries } from '../utils/running-data';
 
-import type { ChartGroupSummary } from '../utils/types';
+import type { RawRunRecord } from '../utils/types';
 
 type RunningTrendsState = {
-  data: ChartGroupSummary[];
+  data: RawRunRecord[];
   error: string | null;
   isLoading: boolean;
 };
@@ -37,7 +36,7 @@ export const useRunningTrends = (csvPath: string): RunningTrendsState => {
         const records = parseCsv(csvText);
 
         setState({
-          data: buildChartSummaries(records),
+          data: records,
           error: null,
           isLoading: false,
         });
