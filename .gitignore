@@ -23,3 +23,5 @@ dashboard-*.png
 *.sqlite3-*
 *.db
 *.db-*
+
+backend/.classifier-dry-run/

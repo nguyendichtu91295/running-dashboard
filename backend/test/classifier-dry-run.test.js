@@ -1,0 +1,10 @@
+import { test } from 'node:test';
+import { strict as assert } from 'node:assert';
+import { classify, matchActivities } from '../src/classifier-dry-run.mjs';
+const a={movingDuration:3000,averageHR:130,activityName:'Workout'};
+const lap=(intensity,totalTimerTime)=>({intensity,totalTimerTime});
+test('structure precedes low HR easy and recovery varies',()=>{const r=classify(a,[lap('active',180),lap('recovery',90),lap('active',200),lap('recovery',170),lap('active',210)]); assert.equal(r.proposed,'interval');});
+test('tempo joins automatic active laps around rest',()=>{const r=classify(a,[lap('recovery',120),lap('active',400),lap('active',400),lap('rest',120)]); assert.equal(r.proposed,'tempo');});
+test('invalid intensity, boundaries, races and conflicts remain unresolved',()=>{assert.equal(classify(a,[lap(255,300)]).unresolved,true); assert.equal(classify({...a,movingDuration:3600},[lap('active',300)]).unresolved,true); assert.equal(classify({...a,activityName:'10km race'},[lap('active',300)]).unresolved,true); assert.equal(classify({...a,movingDuration:4000},[lap('active',200),lap('rest',100),lap('active',200)]).unresolved,true); assert.equal(classify(a,[lap('rest',120),lap('active',600)]).unresolved,true);});
+test('ambiguous keys on either side and unmatched stay explicit',()=>{const rows=[{Title:'Run',Date:'2025-01-01'}]; const got=matchActivities([{activityName:'Run',startTimeLocal:'2025-01-01'},{activityName:'Run',startTimeLocal:'2025-01-01'},{activityName:'Other',startTimeLocal:'2025-01-01'}],rows); assert.deepEqual(got.map(x=>x.status),['ambiguous','ambiguous','unmatched']);});
+test('relative speed can detect repeated effort when FIT intensity is absent',()=>{ const l=(seconds,distanceMetres)=>({totalTimerTime:seconds,totalDistance:distanceMetres,intensity:255}); const r=classify(a,[l(240,1000),l(100,100),l(250,1000),l(150,130),l(240,1000)]); assert.equal(r.proposed,'interval'); });
